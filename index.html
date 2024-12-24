@@ -1,48 +1,58 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gráfico Interactivo</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gráfico desde Excel</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.0.1/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-    <h1>Gráfico Interactivo</h1>
-    <p>El siguiente gráfico muestra los datos de tu archivo Excel:</p>
-    <div id="grafico" style="width:100%;height:600px;"></div>
+  <h1>Gráfico generado desde Excel</h1>
+  <input type="file" id="upload" accept=".xlsx" />
+  <canvas id="chart" width="800" height="400"></canvas>
 
-    <script>
-        // Aquí defines los datos en formato JSON (representan la lectura de tu Excel)
-        const datos = [
-            {"FechaHora": "2024-01-10 01:00:00", "Valor": 100},
-            {"FechaHora": "2024-01-10 02:00:00", "Valor": 150},
-            {"FechaHora": "2024-01-10 03:00:00", "Valor": 200},
-            {"FechaHora": "2024-01-10 04:00:00", "Valor": 180},
-            {"FechaHora": "2024-01-10 05:00:00", "Valor": 170}
-        ];
+  <script>
+    document.getElementById('upload').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
 
-        // Convierte las fechas y valores en listas para Plotly
-        const fechas = datos.map(d => d.FechaHora);
-        const valores = datos.map(d => d.Valor);
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet);
 
-        // Configuración del gráfico
-        const trace = {
-            x: fechas,
-            y: valores,
-            mode: 'lines+markers',
-            name: 'Valores',
-            line: { shape: 'linear' }
-        };
+        const labels = json.map(row => row['FechaHora']);
+        const values = json.map(row => row['Valor']);
 
-        const layout = {
-            title: 'Gráfico Interactivo',
-            xaxis: { title: 'Fecha y Hora' },
-            yaxis: { title: 'Valor' },
-            hovermode: 'closest'
-        };
+        const ctx = document.getElementById('chart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Valores',
+              data: values,
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 2,
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: { title: { display: true, text: 'Fecha y Hora' } },
+              y: { title: { display: true, text: 'Valor' } }
+            }
+          }
+        });
+      };
 
-        // Renderiza el gráfico en el div con id "grafico"
-        Plotly.newPlot('grafico', [trace], layout);
-    </script>
+      reader.readAsArrayBuffer(file);
+    });
+  </script>
 </body>
 </html>
+
