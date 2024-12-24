@@ -20,7 +20,7 @@
 </head>
 <body>
   <h1>Gráfico generado desde Excel</h1>
-  <p>Carga un archivo Excel con dos columnas: <strong>FechaHora</strong> y <strong>Valor</strong>.</p>
+  <p>Carga un archivo Excel con las columnas <strong>Fecha_Hora</strong> y <strong>Vertimientos_PE_TCHAMMA</strong>.</p>
 
   <!-- Entrada para subir archivo -->
   <input type="file" id="upload" accept=".xlsx" />
@@ -44,7 +44,7 @@
       reader.onload = function(e) {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
+        const sheetName = workbook.SheetNames[0]; // Usar la primera hoja
         const sheet = workbook.Sheets[sheetName];
         excelData = XLSX.utils.sheet_to_json(sheet);
 
@@ -67,11 +67,11 @@
       }
 
       // Extraer datos del archivo
-      const labels = excelData.map(row => row['FechaHora'] || row['fechaHora']);
-      const values = excelData.map(row => row['Valor'] || row['valor']);
+      const labels = excelData.map(row => row['Fecha_Hora']);
+      const values = excelData.map(row => row['Vertimientos_PE_TCHAMMA']);
 
       if (labels.length === 0 || values.length === 0) {
-        alert("El archivo no tiene columnas 'FechaHora' y 'Valor'.");
+        alert("El archivo no tiene columnas 'Fecha_Hora' y 'Vertimientos_PE_TCHAMMA'.");
         return;
       }
 
@@ -82,7 +82,7 @@
         data: {
           labels: labels,
           datasets: [{
-            label: 'Valores',
+            label: 'Vertimientos',
             data: values,
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 2,
@@ -94,12 +94,12 @@
           plugins: {
             title: {
               display: true,
-              text: 'Gráfico de Valores desde Excel'
+              text: 'Gráfico de Vertimientos'
             }
           },
           scales: {
             x: { title: { display: true, text: 'Fecha y Hora' } },
-            y: { title: { display: true, text: 'Valor' } }
+            y: { title: { display: true, text: 'Vertimientos' } }
           }
         }
       });
