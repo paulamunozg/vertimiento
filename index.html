@@ -2,7 +2,6 @@
 document.getElementById('excel-file').addEventListener('change', function(event) {
   const file = event.target.files[0];
 
-
   // Usar xlsx.js para leer el archivo
   const reader = new FileReader();
   reader.onload = function(e) {
