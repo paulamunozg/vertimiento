@@ -9,10 +9,18 @@
 </head>
 <body>
   <h1>Gráfico generado desde Excel</h1>
+  
+  <!-- Entrada para subir archivo -->
   <input type="file" id="upload" accept=".xlsx" />
+  <button id="generate">Generar Gráfico</button>
+  
+  <!-- Espacio para el gráfico -->
   <canvas id="chart" width="800" height="400"></canvas>
 
   <script>
+    let excelData = null;
+
+    // Al cargar el archivo, guardamos los datos
     document.getElementById('upload').addEventListener('change', function(event) {
       const file = event.target.files[0];
       const reader = new FileReader();
@@ -22,37 +30,45 @@
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(sheet);
-
-        const labels = json.map(row => row['FechaHora']);
-        const values = json.map(row => row['Valor']);
-
-        const ctx = document.getElementById('chart').getContext('2d');
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [{
-              label: 'Valores',
-              data: values,
-              borderColor: 'rgba(75, 192, 192, 1)',
-              borderWidth: 2,
-              fill: false
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              x: { title: { display: true, text: 'Fecha y Hora' } },
-              y: { title: { display: true, text: 'Valor' } }
-            }
-          }
-        });
+        excelData = XLSX.utils.sheet_to_json(sheet); // Guardamos los datos en memoria
+        alert("Archivo cargado correctamente. Ahora presiona 'Generar Gráfico'.");
       };
 
       reader.readAsArrayBuffer(file);
     });
+
+    // Al hacer clic en el botón, generamos el gráfico
+    document.getElementById('generate').addEventListener('click', function() {
+      if (!excelData) {
+        alert("Por favor, carga un archivo primero.");
+        return;
+      }
+
+      const labels = excelData.map(row => row['FechaHora']);
+      const values = excelData.map(row => row['Valor']);
+
+      const ctx = document.getElementById('chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Valores',
+            data: values,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2,
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { title: { display: true, text: 'Fecha y Hora' } },
+            y: { title: { display: true, text: 'Valor' } }
+          }
+        }
+      });
+    });
   </script>
 </body>
 </html>
-
