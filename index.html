@@ -1,99 +1,82 @@
-// app.js
-document.getElementById('excel-file').addEventListener('change', function(event) {
-  const file = event.target.files[0];
+# Estructura del proyecto
+# ├── generate_chart.py
+# ├── index.html
+# ├── data.xlsx
+# └── .github/workflows/python-app.yml
 
-  // Usar xlsx.js para leer el archivo
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const data = e.target.result;
-    const workbook = XLSX.read(data, { type: 'binary' });
+# 1. Archivo: generate_chart.py
+import pandas as pd
+import plotly.express as px
 
-    // Obtener la primera hoja del libro de trabajo (suponiendo que los datos están en la primera hoja)
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+# Leer el archivo Excel
+data = pd.read_excel('data.xlsx', parse_dates=['A'], dayfirst=True)
+data.columns = ['FechaHora', 'Valor']  # Renombrar columnas para facilidad
 
-    // Convertir la hoja en un formato JSON
-    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+# Crear el gráfico interactivo
+fig = px.line(data, x='FechaHora', y='Valor', 
+              title='Gráfico Interactivo',
+              labels={'FechaHora': 'Fecha y Hora', 'Valor': 'Valor'},
+              hover_data={'FechaHora': '|%d-%m-%Y %H:%M:%S', 'Valor': ':.2f'})
 
-    // Procesar los datos
-    const fechas = [];
-    const valores = [];
+fig.update_layout(
+    xaxis_title="Fecha y Hora",
+    yaxis_title="Valor",
+    hovermode="x unified",
+    template="plotly"
+)
 
-    jsonData.forEach(row => {
-      if (row[0] && row[1]) {
-        // Convertir la fecha a un formato adecuado para graficar (ejemplo: 'dd-mm-yyyy hh:mm')
-        const fecha = row[0].toString().trim();
-        const valor = row[1];
+# Guardar como HTML
+fig.write_html('grafico_interactivo.html')
 
-        // Agregar la fecha y el valor al array
-        fechas.push(fecha);
-        valores.push(valor);
-      }
-    });
+# 2. Archivo: index.html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfico Interactivo</title>
+</head>
+<body>
+    <h1>Gráfico Interactivo</h1>
+    <p>El siguiente gráfico muestra los datos de tu archivo:</p>
+    <iframe src="grafico_interactivo.html" width="100%" height="600px" frameborder="0"></iframe>
+</body>
+</html>
 
-    // Crear el gráfico con Chart.js
-    createChart(fechas, valores);
-  };
+# 3. Archivo: data.xlsx
+# (Debes subir un archivo Excel con dos columnas: A (FechaHora) y B (Valor).)
 
-  // Leer el archivo como binario
-  reader.readAsBinaryString(file);
-});
+# 4. Archivo: .github/workflows/python-app.yml
+name: Generate Interactive Chart
 
-// Función para crear el gráfico con Chart.js
-function createChart(fechas, valores) {
-  const ctx = document.getElementById('myChart').getContext('2d');
+on:
+  push:
+    branches:
+      - main
 
-  const chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: fechas,
-      datasets: [{
-        label: 'Datos del archivo',
-        data: valores,
-        borderColor: 'rgba(75, 192, 192, 1)',
-        fill: false,
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Fecha'
-          },
-          type: 'time', // Usamos el tipo time para las fechas
-          time: {
-            unit: 'minute', // O puedes usar 'hour', 'day', dependiendo de los datos
-            tooltipFormat: 'll HH:mm'
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Valor'
-          }
-        }
-      },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: function(tooltipItem) {
-              return `Valor: ${tooltipItem.raw}`;
-            }
-          }
-        }
-      },
-      zoom: {
-        pan: {
-          enabled: true,
-          mode: 'xy'
-        },
-        zoom: {
-          enabled: true,
-          mode: 'xy',
-          speed: 0.1
-        }
-      }
-    }
-  });
-}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas openpyxl plotly
+
+    - name: Run Python script
+      run: python generate_chart.py
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
