@@ -42,17 +42,23 @@
 
       const reader = new FileReader();
       reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0]; // Usar la primera hoja
-        const sheet = workbook.Sheets[sheetName];
-        excelData = XLSX.utils.sheet_to_json(sheet);
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0]; // Usar la primera hoja
+          const sheet = workbook.Sheets[sheetName];
+          excelData = XLSX.utils.sheet_to_json(sheet);
 
-        if (excelData.length > 0) {
-          alert("Archivo cargado correctamente. Ahora presiona 'Generar Gráfico'.");
-          document.getElementById('generate').disabled = false;
-        } else {
-          alert("El archivo está vacío o no tiene formato válido.");
+          if (excelData.length > 0) {
+            console.log("Datos cargados:", excelData);
+            alert("Archivo cargado correctamente. Ahora presiona 'Generar Gráfico'.");
+            document.getElementById('generate').disabled = false;
+          } else {
+            alert("El archivo está vacío o no tiene formato válido.");
+          }
+        } catch (err) {
+          console.error("Error al leer el archivo:", err);
+          alert("Hubo un error al procesar el archivo. Verifica su formato.");
         }
       };
 
@@ -66,43 +72,56 @@
         return;
       }
 
-      // Extraer datos del archivo
-      const labels = excelData.map(row => row['Fecha_Hora']);
-      const values = excelData.map(row => row['Vertimientos_PE_TCHAMMA']);
+      try {
+        // Extraer datos del archivo
+        const labels = excelData.map(row => row['Fecha_Hora']);
+        const values = excelData.map(row => row['Vertimientos_PE_TCHAMMA']);
 
-      if (labels.length === 0 || values.length === 0) {
-        alert("El archivo no tiene columnas 'Fecha_Hora' y 'Vertimientos_PE_TCHAMMA'.");
-        return;
-      }
-
-      // Crear el gráfico
-      const ctx = document.getElementById('chart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Vertimientos',
-            data: values,
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 2,
-            fill: false
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            title: {
-              display: true,
-              text: 'Gráfico de Vertimientos'
-            }
-          },
-          scales: {
-            x: { title: { display: true, text: 'Fecha y Hora' } },
-            y: { title: { display: true, text: 'Vertimientos' } }
-          }
+        if (labels.length === 0 || values.length === 0) {
+          alert("El archivo no tiene columnas 'Fecha_Hora' y 'Vertimientos_PE_TCHAMMA'.");
+          return;
         }
-      });
+
+        console.log("Etiquetas:", labels);
+        console.log("Valores:", values);
+
+        // Crear el gráfico
+        const ctx = document.getElementById('chart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Vertimientos',
+              data: values,
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 2,
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Gráfico de Vertimientos'
+              }
+            },
+            scales: {
+              x: { title: { display: true, text: 'Fecha y Hora' } },
+              y: { title: { display: true, text: 'Vertimientos' } }
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Error al generar el gráfico:", err);
+        alert("Hubo un error al generar el gráfico.");
+      }
+    });
+  </script>
+</body>
+</html>
+
     });
   </script>
 </body>
