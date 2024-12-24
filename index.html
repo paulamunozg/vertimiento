@@ -1,0 +1,99 @@
+// app.js
+document.getElementById('excel-file').addEventListener('change', function(event) {
+  const file = event.target.files[0];
+
+  // Usar xlsx.js para leer el archivo
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = e.target.result;
+    const workbook = XLSX.read(data, { type: 'binary' });
+
+    // Obtener la primera hoja del libro de trabajo (suponiendo que los datos están en la primera hoja)
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+    // Convertir la hoja en un formato JSON
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    // Procesar los datos
+    const fechas = [];
+    const valores = [];
+
+    jsonData.forEach(row => {
+      if (row[0] && row[1]) {
+        // Convertir la fecha a un formato adecuado para graficar (ejemplo: 'dd-mm-yyyy hh:mm')
+        const fecha = row[0].toString().trim();
+        const valor = row[1];
+
+        // Agregar la fecha y el valor al array
+        fechas.push(fecha);
+        valores.push(valor);
+      }
+    });
+
+    // Crear el gráfico con Chart.js
+    createChart(fechas, valores);
+  };
+
+  // Leer el archivo como binario
+  reader.readAsBinaryString(file);
+});
+
+// Función para crear el gráfico con Chart.js
+function createChart(fechas, valores) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: fechas,
+      datasets: [{
+        label: 'Datos del archivo',
+        data: valores,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        fill: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Fecha'
+          },
+          type: 'time', // Usamos el tipo time para las fechas
+          time: {
+            unit: 'minute', // O puedes usar 'hour', 'day', dependiendo de los datos
+            tooltipFormat: 'll HH:mm'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Valor'
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(tooltipItem) {
+              return `Valor: ${tooltipItem.raw}`;
+            }
+          }
+        }
+      },
+      zoom: {
+        pan: {
+          enabled: true,
+          mode: 'xy'
+        },
+        zoom: {
+          enabled: true,
+          mode: 'xy',
+          speed: 0.1
+        }
+      }
+    }
+  });
+}
