@@ -71,8 +71,7 @@
                         zoom: {
                             pan: {
                                 enabled: true,
-                                mode: 'xy',
-                                threshold: 10
+                                mode: 'xy'
                             },
                             zoom: {
                                 wheel: {
@@ -82,9 +81,7 @@
                                 pinch: {
                                     enabled: true
                                 },
-                                mode: 'xy',
-                                overScaleMode: 'xy',
-                                speed: 0.05
+                                mode: 'xy'
                             }
                         }
                     },
@@ -96,6 +93,7 @@
                             }
                         },
                         y: {
+                            beginAtZero: true,
                             title: {
                                 display: true,
                                 text: 'Y Axis'
@@ -108,3 +106,4 @@
     </script>
 </body>
 </html>
+
