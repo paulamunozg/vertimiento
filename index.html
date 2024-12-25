@@ -1,54 +1,115 @@
-document.getElementById('generate').addEventListener('click', function() {
-  if (!excelData || excelData.length === 0) {
-    alert("Por favor, carga un archivo válido primero.");
-    return;
-  }
-
-  try {
-    // Extraer datos del archivo
-    const labels = excelData.map(row => row['Fecha_Hora']);
-    const values = excelData.map(row => row['Vertimientos_PE_TCHAMMA']);
-
-    if (labels.length === 0 || values.length === 0) {
-      console.error("Error: No se encontraron datos en las columnas esperadas.");
-      console.log("Datos cargados:", excelData);
-      alert("El archivo no tiene columnas 'Fecha_Hora' y 'Vertimientos_PE_TCHAMMA'.");
-      return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gráfico desde Excel</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.0.1/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
     }
+    #chart {
+      margin: 20px auto;
+      max-width: 800px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gráfico generado desde Excel</h1>
+  <p>Carga un archivo Excel con las columnas <strong>Fecha_Hora</strong> y <strong>Vertimientos_PE_TCHAMMA</strong>.</p>
 
-    console.log("Etiquetas extraídas:", labels);
-    console.log("Valores extraídos:", values);
+  <!-- Entrada para subir archivo -->
+  <input type="file" id="upload" accept=".xlsx" />
+  <button id="generate" disabled>Generar Gráfico</button>
 
-    // Crear el gráfico
-    const ctx = document.getElementById('chart').getContext('2d');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Vertimientos',
-          data: values,
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 2,
-          fill: false
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          title: {
-            display: true,
-            text: 'Gráfico de Vertimientos'
-          }
-        },
-        scales: {
-          x: { title: { display: true, text: 'Fecha y Hora' } },
-          y: { title: { display: true, text: 'Vertimientos' } }
-        }
+  <!-- Espacio para el gráfico -->
+  <canvas id="chart" width="800" height="400"></canvas>
+
+  <script>
+    let excelData = null;
+
+    // Al cargar el archivo
+    document.getElementById('upload').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        alert("Por favor, selecciona un archivo.");
+        return;
       }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0]; // Usar la primera hoja
+          const sheet = workbook.Sheets[sheetName];
+          excelData = XLSX.utils.sheet_to_json(sheet);
+
+          if (excelData.length > 0) {
+            alert("Archivo cargado correctamente. Ahora presiona 'Generar Gráfico'.");
+            document.getElementById('generate').disabled = false;
+          } else {
+            alert("El archivo está vacío o no tiene formato válido.");
+          }
+        } catch (err) {
+          console.error("Error al leer el archivo:", err);
+          alert("Hubo un error al procesar el archivo. Verifica su formato.");
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
     });
-  } catch (err) {
-    console.error("Error al generar el gráfico:", err);
-    alert("Hubo un error al generar el gráfico.");
-  }
-});
+
+    // Al hacer clic en "Generar Gráfico"
+    document.getElementById('generate').addEventListener('click', function() {
+      if (!excelData || excelData.length === 0) {
+        alert("Por favor, carga un archivo válido primero.");
+        return;
+      }
+
+      // Extraer datos del archivo
+      const labels = excelData.map(row => row['Fecha_Hora']);
+      const values = excelData.map(row => row['Vertimientos_PE_TCHAMMA']);
+
+      if (labels.length === 0 || values.length === 0) {
+        alert("El archivo no tiene columnas 'Fecha_Hora' y 'Vertimientos_PE_TCHAMMA'.");
+        return;
+      }
+
+      // Crear el gráfico
+      const ctx = document.getElementById('chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Vertimientos',
+            data: values,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2,
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Gráfico de Vertimientos'
+            }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Fecha y Hora' } },
+            y: { title: { display: true, text: 'Vertimientos' } }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
