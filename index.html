@@ -35,6 +35,8 @@
     </div>
 
     <script>
+        let chartInstance;
+
         document.getElementById('plot-button').addEventListener('click', function() {
             const xValues = document.getElementById('x-values').value.split(',').map(Number);
             const yValues = document.getElementById('y-values').value.split(',').map(Number);
@@ -46,7 +48,11 @@
 
             const ctx = document.getElementById('myChart').getContext('2d');
 
-            new Chart(ctx, {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: xValues,
@@ -74,7 +80,10 @@
                                 pinch: {
                                     enabled: true
                                 },
-                                mode: 'x'
+                                mode: 'x',
+                                onZoomComplete: () => {
+                                    alert('Zoom updated. Use double-click to reset.');
+                                }
                             }
                         }
                     },
