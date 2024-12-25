@@ -16,6 +16,9 @@
       margin: 20px auto;
       max-width: 800px;
     }
+    #upload {
+      margin: 10px;
+    }
   </style>
 </head>
 <body>
@@ -24,15 +27,9 @@
 
   <!-- Entrada para subir archivo -->
   <input type="file" id="upload" accept=".xlsx" />
-  <button id="generate" disabled>Generar Gráfico</button>
-
-  <!-- Espacio para el gráfico -->
   <canvas id="chart" width="800" height="400"></canvas>
 
   <script>
-    let excelData = null;
-
-    // Al cargar el archivo
     document.getElementById('upload').addEventListener('change', function(event) {
       const file = event.target.files[0];
       if (!file) {
@@ -42,42 +39,23 @@
 
       const reader = new FileReader();
       reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0]; // Usar la primera hoja
-          const sheet = workbook.Sheets[sheetName];
-          excelData = XLSX.utils.sheet_to_json(sheet);
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0]; // Usar la primera hoja
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
 
-          if (excelData.length > 0) {
-            alert("Archivo cargado correctamente. Ahora presiona 'Generar Gráfico'.");
-            document.getElementById('generate').disabled = false;
-          } else {
-            alert("El archivo está vacío o no tiene formato válido.");
-          }
-        } catch (err) {
-          console.error("Error al leer el archivo:", err);
-          alert("Hubo un error al procesar el archivo. Verifica su formato.");
+        if (jsonData.length === 0) {
+          alert("El archivo está vacío o no tiene formato válido.");
+          return;
         }
-      };
 
-      reader.readAsArrayBuffer(file);
-    });
+        // Extraer datos para el gráfico
+        const labels = jsonData.map(row => row['Fecha_Hora']);
+        const values = jsonData.map(row => row['Vertimientos_PE_TCHAMMA']);
 
-    // Al hacer clic en "Generar Gráfico"
-    document.getElementById('generate').addEventListener('click', function() {
-      if (!excelData || excelData.length === 0) {
-        alert("Por favor, carga un archivo válido primero.");
-        return;
-      }
-
-      try {
-        // Extraer datos del archivo
-        const labels = excelData.map(row => row['Fecha_Hora']);
-        const values = excelData.map(row => row['Vertimientos_PE_TCHAMMA']);
-
-        if (labels.length === 0 || values.length === 0) {
-          alert("El archivo no tiene columnas 'Fecha_Hora' y 'Vertimientos_PE_TCHAMMA'.");
+        if (!labels.length || !values.length) {
+          alert("El archivo no contiene las columnas requeridas: 'Fecha_Hora' y 'Vertimientos_PE_TCHAMMA'.");
           return;
         }
 
@@ -109,10 +87,9 @@
             }
           }
         });
-      } catch (err) {
-        console.error("Error al generar el gráfico:", err);
-        alert("Hubo un error al generar el gráfico.");
-      }
+      };
+
+      reader.readAsArrayBuffer(file);
     });
   </script>
 </body>
