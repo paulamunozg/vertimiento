@@ -71,19 +71,20 @@
                         zoom: {
                             pan: {
                                 enabled: true,
-                                mode: 'x'
+                                mode: 'xy',
+                                threshold: 10
                             },
                             zoom: {
                                 wheel: {
-                                    enabled: true
+                                    enabled: true,
+                                    speed: 0.1
                                 },
                                 pinch: {
                                     enabled: true
                                 },
-                                mode: 'x',
-                                onZoomComplete: () => {
-                                    console.log('Zoom action complete');
-                                }
+                                mode: 'xy',
+                                overScaleMode: 'xy',
+                                speed: 0.05
                             }
                         }
                     },
