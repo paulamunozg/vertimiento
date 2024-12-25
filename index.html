@@ -1,96 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gráfico desde Excel</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.0.1/chart.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 20px;
-    }
-    #chart {
-      margin: 20px auto;
-      max-width: 800px;
-    }
-    #upload {
-      margin: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Plotter</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>Gráfico generado desde Excel</h1>
-  <p>Carga un archivo Excel con las columnas <strong>Fecha_Hora</strong> y <strong>Vertimientos_PE_TCHAMMA</strong>.</p>
+    <h1>Interactive Data Plotter</h1>
+    <div>
+        <label for="x-values">X Values (comma-separated):</label>
+        <input type="text" id="x-values" placeholder="e.g., 1, 2, 3">
+    </div>
+    <div>
+        <label for="y-values">Y Values (comma-separated):</label>
+        <input type="text" id="y-values" placeholder="e.g., 4, 5, 6">
+    </div>
+    <button id="plot-button">Plot</button>
+    <canvas id="myChart" width="400" height="200"></canvas>
 
-  <!-- Entrada para subir archivo -->
-  <input type="file" id="upload" accept=".xlsx" />
-  <canvas id="chart" width="800" height="400"></canvas>
+    <script>
+        document.getElementById('plot-button').addEventListener('click', function() {
+            const xValues = document.getElementById('x-values').value.split(',').map(Number);
+            const yValues = document.getElementById('y-values').value.split(',').map(Number);
 
-  <script>
-    document.getElementById('upload').addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (!file) {
-        alert("Por favor, selecciona un archivo.");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0]; // Usar la primera hoja
-        const sheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(sheet);
-
-        if (jsonData.length === 0) {
-          alert("El archivo está vacío o no tiene formato válido.");
-          return;
-        }
-
-        // Extraer datos para el gráfico
-        const labels = jsonData.map(row => row['Fecha_Hora']);
-        const values = jsonData.map(row => row['Vertimientos_PE_TCHAMMA']);
-
-        if (!labels.length || !values.length) {
-          alert("El archivo no contiene las columnas requeridas: 'Fecha_Hora' y 'Vertimientos_PE_TCHAMMA'.");
-          return;
-        }
-
-        // Crear el gráfico
-        const ctx = document.getElementById('chart').getContext('2d');
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [{
-              label: 'Vertimientos',
-              data: values,
-              borderColor: 'rgba(75, 192, 192, 1)',
-              borderWidth: 2,
-              fill: false
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              title: {
-                display: true,
-                text: 'Gráfico de Vertimientos'
-              }
-            },
-            scales: {
-              x: { title: { display: true, text: 'Fecha y Hora' } },
-              y: { title: { display: true, text: 'Vertimientos' } }
+            if (xValues.length !== yValues.length) {
+                alert('X and Y values must have the same length.');
+                return;
             }
-          }
-        });
-      };
 
-      reader.readAsArrayBuffer(file);
-    });
-  </script>
+            const ctx = document.getElementById('myChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: xValues,
+                    datasets: [{
+                        label: 'Data Plot',
+                        data: yValues,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'X Axis'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Y Axis'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
